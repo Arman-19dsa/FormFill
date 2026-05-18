@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FormVault — Your Info Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg:#f4f3ef;--surface:#fff;--card:#fff;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
+  --text:#1a1916;--muted:#706e68;--faint:#b0ada6;
+  --accent:#2563eb;--accent-bg:#eff4ff;
+  --green:#16a34a;--green-bg:#f0fdf4;
+  --red:#dc2626;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --radius:10px;--rsm:7px;
+}
+[data-theme="dark"]{
+  --bg:#111110;--surface:#1c1b19;--card:#1c1b19;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+  --text:#e8e6e0;--muted:#908e87;--faint:#555450;
+  --accent:#60a5fa;--accent-bg:#1a2640;
+  --green:#4ade80;--green-bg:#0d1f12;
+  --red:#f87171;
+  --shadow:0 1px 3px rgba(0,0,0,.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+
+/* Toast */
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none}
+.t-msg{background:var(--text);color:var(--bg);font-size:.8rem;font-weight:500;padding:.5rem 1.1rem;border-radius:50px;opacity:0;transform:translateY(6px);transition:all .2s;white-space:nowrap;font-family:'DM Mono',monospace}
+.t-msg.show{opacity:1;transform:translateY(0)}
+
+/* Header */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;padding:.8rem 1.5rem;display:flex;align-items:center;gap:.85rem}
+.logo{font-size:1.05rem;font-weight:700;letter-spacing:-.03em;flex-shrink:0;color:var(--text)}
+.logo b{color:var(--accent)}
+.hsearch{flex:1;max-width:340px;position:relative}
+.hsearch input{width:100%;padding:.42rem .75rem .42rem 2rem;border:1px solid var(--border2);border-radius:var(--rsm);background:var(--bg);font-size:.82rem;outline:none;transition:border .15s;color:var(--text)}
+.hsearch input:focus{border-color:var(--accent)}
+.hsearch svg{position:absolute;left:.55rem;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none}
+.hright{margin-left:auto;display:flex;align-items:center;gap:.45rem}
+.ibtn{width:34px;height:34px;border-radius:var(--rsm);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--surface);transition:all .15s;cursor:pointer;flex-shrink:0}
+.ibtn:hover{background:var(--bg);color:var(--text)}
+.pbtn{padding:.42rem .95rem;border-radius:var(--rsm);background:var(--accent);color:#fff;font-size:.8rem;font-weight:600;border:none;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.pbtn:hover{opacity:.88}
+.gbtn{padding:.42rem .85rem;border-radius:var(--rsm);border:1px solid var(--border2);font-size:.8rem;font-weight:500;color:var(--muted);background:transparent;cursor:pointer;white-space:nowrap;transition:all .15s;display:inline-flex;align-items:center;gap:.3rem}
+.gbtn:hover{background:var(--bg);color:var(--text);border-color:var(--border2)}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 57px)}
+
+/* Sidebar */
+.sb{background:var(--surface);border-right:1px solid var(--border);padding:1rem .6rem;display:flex;flex-direction:column;gap:.1rem;position:sticky;top:57px;height:calc(100vh - 57px);overflow-y:auto}
+.sb-lbl{font-size:.67rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:.7rem .6rem .3rem;margin-top:.4rem}
+.sb-lbl:first-child{margin-top:0}
+.nb{display:flex;align-items:center;gap:.55rem;padding:.5rem .65rem;border-radius:var(--rsm);font-size:.83rem;font-weight:500;color:var(--muted);width:100%;text-align:left;transition:all .15s;cursor:pointer;border:none;background:none}
+.nb:hover{background:var(--bg);color:var(--text)}
+.nb.on{background:var(--accent-bg);color:var(--accent);font-weight:600}
+.nb svg{flex-shrink:0}
+.sb-prog{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border)}
+.prog-lbl{font-size:.7rem;color:var(--muted);margin-bottom:.45rem;display:flex;justify-content:space-between}
+.prog-track{height:4px;background:var(--border2);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .35s ease;width:0%}
+
+/* Main */
+.main{padding:1.75rem 2rem}
+.toolbar{display:flex;align-items:center;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.toolbar h1{font-size:1.1rem;font-weight:700;letter-spacing:-.02em;margin-right:auto}
+
+/* Section */
+.sec{margin-bottom:2rem}
+.sec-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.85rem}
+.sec-head h2{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.sec-div{flex:1;height:1px;background:var(--border)}
+
+/* Grid */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:.7rem}
+
+/* Field card */
+.fc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.95rem;box-shadow:var(--shadow);transition:border-color .15s;animation:pop .16s ease both}
+.fc:hover{border-color:var(--border2)}
+.fc.sv{border-left:2.5px solid var(--green)}
+@keyframes pop{from{opacity:0;transform:scale(.97) translateY(3px)}to{opacity:1;transform:none}}
+.fc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem}
+.fc-lbl{font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:.3rem}
+.fc-badge{font-size:.63rem;font-weight:600;color:var(--green);background:var(--green-bg);padding:.12rem .45rem;border-radius:50px;opacity:0;transition:opacity .2s}
+.fc.sv .fc-badge{opacity:1}
+.fi{width:100%;padding:.48rem .6rem;border:1px solid var(--border2);border-radius:var(--rsm);background:var(--bg);font-size:.86rem;outline:none;resize:none;transition:border .15s;line-height:1.5;color:var(--text)}
+.fi:focus{border-color:var(--accent);background:var(--surface)}
+.fi[readonly]{cursor:default;border-color:transparent;background:transparent;padding-left:0}
+.fi[readonly]:focus{border-color:transparent;background:transparent}
+.fc-acts{display:flex;gap:.35rem;margin-top:.6rem;justify-content:flex-end}
+.fb{display:inline-flex;align-items:center;gap:.28rem;padding:.32rem .65rem;border-radius:var(--rsm);font-size:.73rem;font-weight:600;border:1px solid var(--border2);background:var(--surface);color:var(--muted);transition:all .15s;cursor:pointer}
+.fb:hover{background:var(--bg);color:var(--text)}
+.fb.s{background:var(--accent);border-color:var(--accent);color:#fff}
+.fb.s:hover{opacity:.88}
+.fb.c:hover{border-color:var(--accent);color:var(--accent)}
+.fb.d:hover{border-color:var(--red);color:var(--red)}
+
+/* Add card */
+.addcard{background:transparent;border:1.5px dashed var(--border2);border-radius:var(--radius);padding:1.2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;cursor:pointer;transition:all .15s;min-height:134px;color:var(--faint)}
+.addcard:hover{border-color:var(--accent);background:var(--accent-bg);color:var(--accent)}
+.addcard span{font-size:.82rem;font-weight:500}
+
+/* Empty */
+.empty{display:none;flex-direction:column;align-items:center;padding:3rem 1rem;text-align:center;color:var(--faint);gap:.4rem}
+.empty.on{display:flex}
+.empty p{font-size:.88rem}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:1.5rem}
+.overlay.on{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.5rem;width:100%;max-width:390px;box-shadow:0 16px 48px rgba(0,0,0,.18)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.modal-hd h3{font-size:1rem;font-weight:700}
+.modal-hd button{color:var(--faint);font-size:1.1rem;line-height:1}
+.modal-hd button:hover{color:var(--text)}
+.mlbl{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:.35rem;letter-spacing:.03em;text-transform:uppercase}
+.minput{width:100%;padding:.52rem .7rem;border:1px solid var(--border2);border-radius:var(--rsm);background:var(--bg);outline:none;font-size:.88rem;margin-bottom:.85rem;color:var(--text)}
+.minput:focus{border-color:var(--accent)}
+.modal-ft{display:flex;gap:.45rem;justify-content:flex-end}
+
+/* Responsive */
+@media(max-width:620px){
+  .layout{grid-template-columns:1fr}
+  .sb{display:none}
+  .main{padding:1.1rem 1rem}
+  .fgrid{grid-template-columns:1fr}
+  .hright .gbtn span{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast"><div class="t-msg" id="tmsg"></div></div>
+
+<!-- Modal -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3>Add custom field</h3>
+      <button onclick="cm()">✕</button>
+    </div>
+    <label class="mlbl">Field name</label>
+    <input class="minput" id="mname" type="text" placeholder="e.g. Passport Number" />
+    <label class="mlbl">Input type</label>
+    <select class="minput" id="mtype">
+      <option value="text">Text</option>
+      <option value="email">Email</option>
+      <option value="tel">Phone</option>
+      <option value="url">URL / Link</option>
+      <option value="textarea">Long text</option>
+    </select>
+    <div class="modal-ft">
+      <button class="gbtn" onclick="cm()">Cancel</button>
+      <button class="pbtn" onclick="addCustom()">Add field</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="hdr">
+  <div class="logo">Form<b>Vault</b></div>
+
+  <div class="hsearch">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="sq" placeholder="Search fields…" oninput="filter()" />
+  </div>
+
+  <div class="hright">
+    <button class="ibtn" onclick="toggleTheme()" id="tbtn" title="Toggle theme">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="gbtn" onclick="copyAll()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <span>Copy all</span>
+    </button>
+    <button class="gbtn" onclick="exportJ()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Export</span>
+    </button>
+    <label class="gbtn" style="cursor:pointer">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Import</span>
+      <input type="file" accept=".json" style="display:none" onchange="importJ(event)" />
+    </label>
+  </div>
+</header>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sb">
+    <div class="sb-lbl">Jump to</div>
+    <button class="nb on" id="nb-personal" onclick="goto('personal')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Personal
+    </button>
+    <button class="nb" id="nb-academic" onclick="goto('academic')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      Academic
+    </button>
+    <button class="nb" id="nb-professional" onclick="goto('professional')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      Professional
+    </button>
+    <button class="nb" id="nb-custom" onclick="goto('custom')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Custom
+    </button>
+
+    <div class="sb-lbl">Quick actions</div>
+    <button class="nb" onclick="copyAll()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy all fields
+    </button>
+    <button class="nb" onclick="exportJ()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export JSON
+    </button>
+
+    <div class="sb-prog">
+      <div class="prog-lbl"><span>Profile filled</span><span id="ppct">0%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="pfill"></div></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <div class="toolbar">
+      <h1>My Info Vault</h1>
+      <button class="gbtn" onclick="om()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add custom field
+      </button>
+    </div>
+
+    <!-- Empty search result -->
+    <div class="empty" id="empty">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <p>No fields match your search.</p>
+    </div>
+
+    <!-- Personal -->
+    <div class="sec" id="personal">
+      <div class="sec-head"><h2>Personal</h2><div class="sec-div"></div></div>
+      <div class="fgrid" id="g-personal"></div>
+    </div>
+
+    <!-- Academic -->
+    <div class="sec" id="academic">
+      <div class="sec-head"><h2>Academic</h2><div class="sec-div"></div></div>
+      <div class="fgrid" id="g-academic"></div>
+    </div>
+
+    <!-- Professional -->
+    <div class="sec" id="professional">
+      <div class="sec-head"><h2>Professional</h2><div class="sec-div"></div></div>
+      <div class="fgrid" id="g-professional"></div>
+    </div>
+
+    <!-- Custom -->
+    <div class="sec" id="custom">
+      <div class="sec-head"><h2>Custom fields</h2><div class="sec-div"></div></div>
+      <div class="fgrid" id="g-custom">
+        <div class="addcard" onclick="om()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Add custom field</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── Field definitions ──
+const DEFS = {
+  personal:[
+    {id:'full_name', label:'Full Name',     type:'text',     ph:'Rahul Sharma'},
+    {id:'email',     label:'Email',          type:'email',    ph:'rahul@email.com'},
+    {id:'phone',     label:'Phone',          type:'tel',      ph:'+91 98765 43210'},
+    {id:'dob',       label:'Date of Birth',  type:'text',     ph:'15/08/2002'},
+    {id:'aadhaar',   label:'Aadhaar',        type:'text',     ph:'1234 5678 9012'},
+    {id:'address',   label:'Address',        type:'textarea', ph:'House, Street, City, PIN'},
+  ],
+  academic:[
+    {id:'prn',       label:'PRN Number',     type:'text',     ph:'12345678901234'},
+    {id:'college',   label:'College Name',   type:'text',     ph:'MIT College, Pune'},
+    {id:'branch',    label:'Branch',         type:'text',     ph:'Computer Science & Engineering'},
+    {id:'cgpa',      label:'CGPA',           type:'text',     ph:'8.75'},
+    {id:'tenth',     label:'10th %',         type:'text',     ph:'88.40%'},
+    {id:'twelfth',   label:'12th %',         type:'text',     ph:'82.60%'},
+    {id:'diploma',   label:'Diploma %',      type:'text',     ph:'79.20% (or leave blank)'},
+  ],
+  professional:[
+    {id:'linkedin',  label:'LinkedIn URL',   type:'url',      ph:'linkedin.com/in/yourprofile'},
+    {id:'github',    label:'GitHub URL',     type:'url',      ph:'github.com/yourusername'},
+    {id:'resume',    label:'Resume Link',    type:'url',      ph:'drive.google.com/...'},
+    {id:'skills',    label:'Skills',         type:'textarea', ph:'Python, JavaScript, React, SQL...'},
+    {id:'experience',label:'Experience',     type:'textarea', ph:'6 months intern at XYZ Corp (2024)'},
+    {id:'certs',     label:'Certifications', type:'textarea', ph:'AWS Cloud Practitioner, Google DA...'},
+    {id:'projects',  label:'Projects',       type:'textarea', ph:'E-Commerce App, AI Chatbot...'},
+  ],
+};
+
+// ── Storage helpers ──
+const K = 'fv2';
+const get  = () => { try{return JSON.parse(localStorage.getItem(K))||{}}catch{return{}} };
+const set  = d  => localStorage.setItem(K, JSON.stringify(d));
+const save = (id,v) => { const d=get(); d[id]=v; set(d); };
+const del  = id => { const d=get(); delete d[id]; set(d); };
+
+// ── Build a single field card ──
+function mkCard(f, removable=false) {
+  const val = get()[f.id]||'';
+  const hasV = val.trim()!=='';
+  const isTA = f.type==='textarea';
+
+  const inp = isTA
+    ? `<textarea class="fi" data-id="${f.id}" rows="3" placeholder="${f.ph}"${hasV?' readonly':''}>${val}</textarea>`
+    : `<input class="fi" type="${f.type}" data-id="${f.id}" placeholder="${f.ph}" value="${val.replace(/"/g,'&quot;')}"${hasV?' readonly':''}/>`;
+
+  const c = document.createElement('div');
+  c.className = 'fc'+(hasV?' sv':'');
+  c.dataset.id = f.id;
+  c.dataset.q  = f.label.toLowerCase();
+
+  const delBtn = removable
+    ? `<button class="fb d" onclick="rmCard(this)" title="Delete">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+       </button>`
+    : '';
+
+  c.innerHTML = `
+    <div class="fc-top">
+      <span class="fc-lbl">${f.label}</span>
+      <span class="fc-badge">saved</span>
+    </div>
+    ${inp}
+    <div class="fc-acts">
+      <button class="fb s" onclick="svCard(this)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save
+      </button>
+      <button class="fb c" onclick="cpCard(this)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy
+      </button>
+      <button class="fb" onclick="edCard(this)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+      ${delBtn}
+    </div>`;
+  return c;
+}
+
+// ── Render all sections ──
+function renderAll() {
+  ['personal','academic','professional'].forEach(sec => {
+    const g = document.getElementById('g-'+sec);
+    g.innerHTML='';
+    DEFS[sec].forEach(f => g.appendChild(mkCard(f)));
+  });
+
+  // Custom fields
+  const cg  = document.getElementById('g-custom');
+  const add = cg.querySelector('.addcard');
+  cg.innerHTML='';
+  const customs = JSON.parse(localStorage.getItem('fv_cust')||'[]');
+  customs.forEach(f => cg.appendChild(mkCard(f, true)));
+  if (add) cg.appendChild(add);
+  else {
+    const d=document.createElement('div'); d.className='addcard'; d.onclick=om;
+    d.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add custom field</span>`;
+    cg.appendChild(d);
+  }
+  prog();
+}
+
+// ── Card actions ──
+function svCard(btn) {
+  const c = btn.closest('.fc');
+  const i = c.querySelector('.fi');
+  const v = i.value.trim();
+  save(i.dataset.id, v);
+  i.setAttribute('readonly', true);
+  c.classList.toggle('sv', v!=='');
+  toast(c.querySelector('.fc-lbl').textContent.trim()+' saved');
+  prog();
+}
+
+function edCard(btn) {
+  const i = btn.closest('.fc').querySelector('.fi');
+  i.removeAttribute('readonly');
+  i.focus();
+  try{ const l=i.value.length; i.setSelectionRange(l,l); }catch{}
+}
+
+function cpCard(btn) {
+  const c = btn.closest('.fc');
+  const v = c.querySelector('.fi').value.trim();
+  const l = c.querySelector('.fc-lbl').textContent.trim();
+  if (!v) { toast('Empty — nothing to copy'); return; }
+  navigator.clipboard.writeText(v).then(() => toast(l+' copied'));
+}
+
+function rmCard(btn) {
+  const c = btn.closest('.fc');
+  const id = c.querySelector('.fi').dataset.id;
+  del(id);
+  const cust = JSON.parse(localStorage.getItem('fv_cust')||'[]').filter(f=>f.id!==id);
+  localStorage.setItem('fv_cust', JSON.stringify(cust));
+  c.remove();
+  prog();
+  toast('Field deleted');
+}
+
+// ── Progress bar ──
+function prog() {
+  const d = get();
+  const cards = document.querySelectorAll('.fc');
+  const total = cards.length;
+  const filled = [...cards].filter(c => {
+    const i = c.querySelector('.fi');
+    return i && d[i.dataset.id]?.trim();
+  }).length;
+  const pct = total ? Math.round(filled/total*100) : 0;
+  document.getElementById('pfill').style.width = pct+'%';
+  document.getElementById('ppct').textContent  = pct+'%';
+}
+
+// ── Copy all ──
+function copyAll() {
+  const d = get();
+  const lines = [];
+  document.querySelectorAll('.fc').forEach(c => {
+    const i = c.querySelector('.fi');
+    const l = c.querySelector('.fc-lbl').textContent.trim();
+    const v = d[i?.dataset.id];
+    if (v?.trim()) lines.push(l+': '+v);
+  });
+  if (!lines.length) { toast('No saved data to copy'); return; }
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>toast('Copied '+lines.length+' fields'));
+}
+
+// ── Export / Import ──
+function exportJ() {
+  const d = get();
+  if (!Object.keys(d).length) { toast('Nothing saved yet'); return; }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
+  a.download='formvault.json'; a.click(); URL.revokeObjectURL(a.href);
+  toast('Exported formvault.json');
+}
+
+function importJ(e) {
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      localStorage.setItem(K,JSON.stringify(JSON.parse(ev.target.result)));
+      renderAll(); toast('Profile imported');
+    }catch{ toast('Invalid JSON file'); }
+  };
+  r.readAsText(f); e.target.value='';
+}
+
+// ── Search ──
+function filter() {
+  const q=document.getElementById('sq').value.toLowerCase().trim();
+  let vis=0;
+  document.querySelectorAll('.fc').forEach(c=>{
+    const match = !q || c.dataset.q.includes(q) || (c.querySelector('.fi')?.value||'').toLowerCase().includes(q);
+    c.style.display = match?'':'none';
+    if(match) vis++;
+  });
+  document.getElementById('empty').classList.toggle('on', vis===0 && q!=='');
+}
+
+// ── Custom field modal ──
+function om() { document.getElementById('modal').classList.add('on'); document.getElementById('mname').focus(); }
+function cm() { document.getElementById('modal').classList.remove('on'); document.getElementById('mname').value=''; }
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal'))cm(); });
+document.getElementById('mname').addEventListener('keydown',e=>{ if(e.key==='Enter') addCustom(); });
+
+function addCustom() {
+  const n=document.getElementById('mname').value.trim();
+  if(!n){ document.getElementById('mname').focus(); return; }
+  const t=document.getElementById('mtype').value;
+  const f={id:'c_'+Date.now(), label:n, type:t, ph:'Enter '+n};
+  const cust=JSON.parse(localStorage.getItem('fv_cust')||'[]');
+  cust.push(f); localStorage.setItem('fv_cust',JSON.stringify(cust));
+  const cg=document.getElementById('g-custom');
+  const add=cg.querySelector('.addcard');
+  cg.insertBefore(mkCard(f,true), add);
+  cm(); prog(); toast('"'+n+'" added');
+}
+
+// ── Scroll nav ──
+function goto(id) {
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('nb-'+id)?.classList.add('on');
+}
+
+new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+      document.getElementById('nb-'+e.target.id)?.classList.add('on');
+    }
+  });
+},{threshold:.25}).observe && ['personal','academic','professional','custom'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting){
+      document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+      document.getElementById('nb-'+id)?.classList.add('on');
+    }
+  },{threshold:.25}).observe(el);
+});
+
+// ── Theme ──
+function toggleTheme(){
+  const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('fv_theme',t);
+  setThemeIcon(t);
+}
+function setThemeIcon(t){
+  document.getElementById('tbtn').innerHTML = t==='dark'
+    ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
+    : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+}
+
+// ── Toast ──
+let tt;
+function toast(msg){
+  const el=document.getElementById('tmsg');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// ── Init ──
+(function(){
+  const theme=localStorage.getItem('fv_theme')||'light';
+  document.documentElement.setAttribute('data-theme',theme);
+  setThemeIcon(theme);
+  renderAll();
+})();
+</script>
+</body>
+</html>
