@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FormVault — Your Info Dashboard</title>
+<title>FormFill — Your Info Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
@@ -49,10 +49,8 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
 .hright{margin-left:auto;display:flex;align-items:center;gap:.45rem}
 .ibtn{width:34px;height:34px;border-radius:var(--rsm);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--surface);transition:all .15s;cursor:pointer;flex-shrink:0}
 .ibtn:hover{background:var(--bg);color:var(--text)}
-.pbtn{padding:.42rem .95rem;border-radius:var(--rsm);background:var(--accent);color:#fff;font-size:.8rem;font-weight:600;border:none;cursor:pointer;white-space:nowrap;transition:opacity .15s}
-.pbtn:hover{opacity:.88}
 .gbtn{padding:.42rem .85rem;border-radius:var(--rsm);border:1px solid var(--border2);font-size:.8rem;font-weight:500;color:var(--muted);background:transparent;cursor:pointer;white-space:nowrap;transition:all .15s;display:inline-flex;align-items:center;gap:.3rem}
-.gbtn:hover{background:var(--bg);color:var(--text);border-color:var(--border2)}
+.gbtn:hover{background:var(--bg);color:var(--text)}
 
 /* Layout */
 .layout{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 57px)}
@@ -81,23 +79,34 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
 .sec-head h2{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
 .sec-div{flex:1;height:1px;background:var(--border)}
 
-/* Grid */
-.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:.7rem}
+/* Grid — droppable */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:.7rem;min-height:60px;transition:background .15s;border-radius:var(--radius)}
+.fgrid.drag-over{background:var(--accent-bg);outline:2px dashed var(--accent);outline-offset:4px}
 
 /* Field card */
-.fc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.95rem;box-shadow:var(--shadow);transition:border-color .15s;animation:pop .16s ease both}
+.fc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.95rem;box-shadow:var(--shadow);transition:border-color .15s, opacity .15s, transform .15s;animation:pop .16s ease both}
 .fc:hover{border-color:var(--border2)}
 .fc.sv{border-left:2.5px solid var(--green)}
+.fc.dragging{opacity:.4;transform:scale(.97)}
 @keyframes pop{from{opacity:0;transform:scale(.97) translateY(3px)}to{opacity:1;transform:none}}
-.fc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem}
-.fc-lbl{font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:.3rem}
-.fc-badge{font-size:.63rem;font-weight:600;color:var(--green);background:var(--green-bg);padding:.12rem .45rem;border-radius:50px;opacity:0;transition:opacity .2s}
+
+/* Drag handle — only on custom cards */
+.drag-handle{cursor:grab;color:var(--faint);display:flex;align-items:center;padding:.1rem .2rem;border-radius:4px;transition:color .15s}
+.drag-handle:hover{color:var(--muted)}
+.drag-handle:active{cursor:grabbing}
+
+.fc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem;gap:.4rem}
+.fc-lbl{font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:.3rem;flex:1;min-width:0}
+.fc-lbl-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-badge{font-size:.63rem;font-weight:600;color:var(--green);background:var(--green-bg);padding:.12rem .45rem;border-radius:50px;opacity:0;transition:opacity .2s;flex-shrink:0}
 .fc.sv .fc-badge{opacity:1}
+
 .fi{width:100%;padding:.48rem .6rem;border:1px solid var(--border2);border-radius:var(--rsm);background:var(--bg);font-size:.86rem;outline:none;resize:none;transition:border .15s;line-height:1.5;color:var(--text)}
 .fi:focus{border-color:var(--accent);background:var(--surface)}
 .fi[readonly]{cursor:default;border-color:transparent;background:transparent;padding-left:0}
 .fi[readonly]:focus{border-color:transparent;background:transparent}
-.fc-acts{display:flex;gap:.35rem;margin-top:.6rem;justify-content:flex-end}
+
+.fc-acts{display:flex;gap:.35rem;margin-top:.6rem;justify-content:flex-end;flex-wrap:wrap}
 .fb{display:inline-flex;align-items:center;gap:.28rem;padding:.32rem .65rem;border-radius:var(--rsm);font-size:.73rem;font-weight:600;border:1px solid var(--border2);background:var(--surface);color:var(--muted);transition:all .15s;cursor:pointer}
 .fb:hover{background:var(--bg);color:var(--text)}
 .fb.s{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -106,11 +115,15 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
 .fb.d:hover{border-color:var(--red);color:var(--red)}
 
 /* Add card */
-.addcard{background:transparent;border:1.5px dashed var(--border2);border-radius:var(--radius);padding:1.2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;cursor:pointer;transition:all .15s;min-height:134px;color:var(--faint)}
+.addcard{background:transparent;border:1.5px dashed var(--border2);border-radius:var(--radius);padding:1.2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;cursor:pointer;transition:all .15s;min-height:120px;color:var(--faint)}
 .addcard:hover{border-color:var(--accent);background:var(--accent-bg);color:var(--accent)}
 .addcard span{font-size:.82rem;font-weight:500}
 
-/* Empty */
+/* Drop zone placeholder shown in non-custom grids when dragging */
+.drop-hint{display:none;border:2px dashed var(--accent);border-radius:var(--radius);background:var(--accent-bg);min-height:80px;opacity:0;transition:opacity .2s;align-items:center;justify-content:center;font-size:.8rem;color:var(--accent);font-weight:500}
+.fgrid.drag-over .drop-hint{display:flex;opacity:1}
+
+/* Empty search */
 .empty{display:none;flex-direction:column;align-items:center;padding:3rem 1rem;text-align:center;color:var(--faint);gap:.4rem}
 .empty.on{display:flex}
 .empty p{font-size:.88rem}
@@ -128,7 +141,9 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
 .minput:focus{border-color:var(--accent)}
 .modal-ft{display:flex;gap:.45rem;justify-content:flex-end}
 
-/* Responsive */
+/* Drag-to-section tip banner */
+.drag-tip{font-size:.75rem;color:var(--faint);background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:.4rem .75rem;display:inline-flex;align-items:center;gap:.4rem;margin-bottom:1rem}
+
 @media(max-width:620px){
   .layout{grid-template-columns:1fr}
   .sb{display:none}
@@ -143,7 +158,7 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
 <!-- Toast -->
 <div id="toast"><div class="t-msg" id="tmsg"></div></div>
 
-<!-- Modal -->
+<!-- Add Custom Field Modal -->
 <div class="overlay" id="modal">
   <div class="modal">
     <div class="modal-hd">
@@ -160,20 +175,27 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
       <option value="url">URL / Link</option>
       <option value="textarea">Long text</option>
     </select>
+    <label class="mlbl">Place in section</label>
+    <select class="minput" id="msection">
+      <option value="personal">Personal</option>
+      <option value="academic">Academic</option>
+      <option value="professional">Professional</option>
+      <option value="custom">Custom (default)</option>
+    </select>
     <div class="modal-ft">
       <button class="gbtn" onclick="cm()">Cancel</button>
-      <button class="pbtn" onclick="addCustom()">Add field</button>
+      <button style="padding:.48rem 1rem;border-radius:var(--rsm);background:var(--accent);color:#fff;font-size:.82rem;font-weight:600;border:none;cursor:pointer" onclick="addCustom()">Add field</button>
     </div>
   </div>
 </div>
 
 <!-- Header -->
 <header class="hdr">
-  <div class="logo">Form<b>Vault</b></div>
+  <div class="logo">Form<b>Fill</b></div>
 
   <div class="hsearch">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="sq" placeholder="Search fields…" oninput="filter()" />
+    <input type="text" id="sq" placeholder="Search fields…" oninput="filterFields()" />
   </div>
 
   <div class="hright">
@@ -235,7 +257,7 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
     </div>
   </aside>
 
-  <!-- Main -->
+  <!-- Main content -->
   <main class="main">
 
     <div class="toolbar">
@@ -246,7 +268,13 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
       </button>
     </div>
 
-    <!-- Empty search result -->
+    <!-- Drag tip — shown only when there are custom fields -->
+    <div class="drag-tip" id="drag-tip" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>
+      Drag custom fields (via the ⠿ handle) to move them into any section
+    </div>
+
+    <!-- Empty search -->
     <div class="empty" id="empty">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <p>No fields match your search.</p>
@@ -255,26 +283,26 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
     <!-- Personal -->
     <div class="sec" id="personal">
       <div class="sec-head"><h2>Personal</h2><div class="sec-div"></div></div>
-      <div class="fgrid" id="g-personal"></div>
+      <div class="fgrid" id="g-personal" data-section="personal"></div>
     </div>
 
     <!-- Academic -->
     <div class="sec" id="academic">
       <div class="sec-head"><h2>Academic</h2><div class="sec-div"></div></div>
-      <div class="fgrid" id="g-academic"></div>
+      <div class="fgrid" id="g-academic" data-section="academic"></div>
     </div>
 
     <!-- Professional -->
     <div class="sec" id="professional">
       <div class="sec-head"><h2>Professional</h2><div class="sec-div"></div></div>
-      <div class="fgrid" id="g-professional"></div>
+      <div class="fgrid" id="g-professional" data-section="professional"></div>
     </div>
 
     <!-- Custom -->
     <div class="sec" id="custom">
       <div class="sec-head"><h2>Custom fields</h2><div class="sec-div"></div></div>
-      <div class="fgrid" id="g-custom">
-        <div class="addcard" onclick="om()">
+      <div class="fgrid" id="g-custom" data-section="custom">
+        <div class="addcard" id="addcard-btn" onclick="om()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span>Add custom field</span>
         </div>
@@ -285,46 +313,58 @@ input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
 </div>
 
 <script>
-// ── Field definitions ──
+// ────────────────────────────────────────────
+//  FIELD DEFINITIONS
+//  Removed: aadhaar, address
+//  Added to professional: leetcode, hackerrank, codechef
+// ────────────────────────────────────────────
 const DEFS = {
-  personal:[
-    {id:'full_name', label:'Full Name',     type:'text',     ph:'Rahul Sharma'},
-    {id:'email',     label:'Email',          type:'email',    ph:'rahul@email.com'},
-    {id:'phone',     label:'Phone',          type:'tel',      ph:'+91 98765 43210'},
-    {id:'dob',       label:'Date of Birth',  type:'text',     ph:'15/08/2002'},
-    {id:'aadhaar',   label:'Aadhaar',        type:'text',     ph:'1234 5678 9012'},
-    {id:'address',   label:'Address',        type:'textarea', ph:'House, Street, City, PIN'},
+  personal: [
+    {id:'full_name', label:'Full Name',    type:'text',  ph:'Rahul Sharma'},
+    {id:'email',     label:'Email',         type:'email', ph:'rahul@email.com'},
+    {id:'phone',     label:'Phone',         type:'tel',   ph:'+91 98765 43210'},
+    {id:'dob',       label:'Date of Birth', type:'text',  ph:'15/08/2002'},
   ],
-  academic:[
-    {id:'prn',       label:'PRN Number',     type:'text',     ph:'12345678901234'},
-    {id:'college',   label:'College Name',   type:'text',     ph:'MIT College, Pune'},
-    {id:'branch',    label:'Branch',         type:'text',     ph:'Computer Science & Engineering'},
-    {id:'cgpa',      label:'CGPA',           type:'text',     ph:'8.75'},
-    {id:'tenth',     label:'10th %',         type:'text',     ph:'88.40%'},
-    {id:'twelfth',   label:'12th %',         type:'text',     ph:'82.60%'},
-    {id:'diploma',   label:'Diploma %',      type:'text',     ph:'79.20% (or leave blank)'},
+  academic: [
+    {id:'prn',     label:'PRN Number',  type:'text', ph:'12345678901234'},
+    {id:'college', label:'College Name',type:'text', ph:'MIT College, Pune'},
+    {id:'branch',  label:'Branch',      type:'text', ph:'Computer Science & Engineering'},
+    {id:'cgpa',    label:'CGPA',        type:'text', ph:'8.75'},
+    {id:'tenth',   label:'10th %',      type:'text', ph:'88.40%'},
+    {id:'twelfth', label:'12th %',      type:'text', ph:'82.60%'},
+    {id:'diploma', label:'Diploma %',   type:'text', ph:'79.20% (or leave blank)'},
   ],
-  professional:[
-    {id:'linkedin',  label:'LinkedIn URL',   type:'url',      ph:'linkedin.com/in/yourprofile'},
-    {id:'github',    label:'GitHub URL',     type:'url',      ph:'github.com/yourusername'},
-    {id:'resume',    label:'Resume Link',    type:'url',      ph:'drive.google.com/...'},
-    {id:'skills',    label:'Skills',         type:'textarea', ph:'Python, JavaScript, React, SQL...'},
-    {id:'experience',label:'Experience',     type:'textarea', ph:'6 months intern at XYZ Corp (2024)'},
-    {id:'certs',     label:'Certifications', type:'textarea', ph:'AWS Cloud Practitioner, Google DA...'},
-    {id:'projects',  label:'Projects',       type:'textarea', ph:'E-Commerce App, AI Chatbot...'},
+  professional: [
+    {id:'linkedin',   label:'LinkedIn URL',   type:'url',      ph:'linkedin.com/in/yourprofile'},
+    {id:'github',     label:'GitHub URL',     type:'url',      ph:'github.com/yourusername'},
+    {id:'leetcode',   label:'LeetCode URL',   type:'url',      ph:'leetcode.com/yourprofile'},
+    {id:'hackerrank', label:'HackerRank URL', type:'url',      ph:'hackerrank.com/yourprofile'},
+    {id:'codechef',   label:'CodeChef URL',   type:'url',      ph:'codechef.com/users/yourprofile'},
+    {id:'resume',     label:'Resume Link',    type:'url',      ph:'drive.google.com/...'},
+    {id:'skills',     label:'Skills',         type:'textarea', ph:'Python, JavaScript, React, SQL...'},
+    {id:'experience', label:'Experience',     type:'textarea', ph:'6 months intern at XYZ Corp (2024)'},
+    {id:'certs',      label:'Certifications', type:'textarea', ph:'AWS Cloud Practitioner...'},
+    {id:'projects',   label:'Projects',       type:'textarea', ph:'E-Commerce App, AI Chatbot...'},
   ],
 };
 
-// ── Storage helpers ──
-const K = 'fv2';
-const get  = () => { try{return JSON.parse(localStorage.getItem(K))||{}}catch{return{}} };
+// ── Storage ──
+const K = 'ff_data'; // new key: FormFill
+const get  = () => { try{ return JSON.parse(localStorage.getItem(K))||{} }catch{ return {} } };
 const set  = d  => localStorage.setItem(K, JSON.stringify(d));
 const save = (id,v) => { const d=get(); d[id]=v; set(d); };
-const del  = id => { const d=get(); delete d[id]; set(d); };
+const drop = id    => { const d=get(); delete d[id]; set(d); };
 
-// ── Build a single field card ──
-function mkCard(f, removable=false) {
-  const val = get()[f.id]||'';
+// Custom fields list stored separately
+const getCust = ()       => JSON.parse(localStorage.getItem('ff_cust')||'[]');
+const setCust = arr      => localStorage.setItem('ff_cust', JSON.stringify(arr));
+
+// ── Drag state ──
+let dragId = null; // id of custom field being dragged
+
+// ── Build a field card ──
+function mkCard(f, isCustom=false) {
+  const val  = get()[f.id]||'';
   const hasV = val.trim()!=='';
   const isTA = f.type==='textarea';
 
@@ -332,20 +372,38 @@ function mkCard(f, removable=false) {
     ? `<textarea class="fi" data-id="${f.id}" rows="3" placeholder="${f.ph}"${hasV?' readonly':''}>${val}</textarea>`
     : `<input class="fi" type="${f.type}" data-id="${f.id}" placeholder="${f.ph}" value="${val.replace(/"/g,'&quot;')}"${hasV?' readonly':''}/>`;
 
-  const c = document.createElement('div');
-  c.className = 'fc'+(hasV?' sv':'');
-  c.dataset.id = f.id;
-  c.dataset.q  = f.label.toLowerCase();
+  const handle = isCustom
+    ? `<span class="drag-handle" title="Drag to move to another section" draggable="true"
+         onmousedown="event.stopPropagation()"
+         ondragstart="onDragStart(event,'${f.id}')"
+         ondragend="onDragEnd(event)">
+         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+           <circle cx="9" cy="5" r="1" fill="currentColor" stroke="none"/>
+           <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none"/>
+           <circle cx="9" cy="19" r="1" fill="currentColor" stroke="none"/>
+           <circle cx="15" cy="5" r="1" fill="currentColor" stroke="none"/>
+           <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
+           <circle cx="15" cy="19" r="1" fill="currentColor" stroke="none"/>
+         </svg>
+       </span>`
+    : '';
 
-  const delBtn = removable
+  const delBtn = isCustom
     ? `<button class="fb d" onclick="rmCard(this)" title="Delete">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
        </button>`
     : '';
 
+  const c = document.createElement('div');
+  c.className = 'fc'+(hasV?' sv':'');
+  c.dataset.id  = f.id;
+  c.dataset.q   = f.label.toLowerCase();
+  c.dataset.custom = isCustom ? '1' : '0';
+
   c.innerHTML = `
     <div class="fc-top">
-      <span class="fc-lbl">${f.label}</span>
+      ${handle}
+      <span class="fc-lbl"><span class="fc-lbl-text">${f.label}</span></span>
       <span class="fc-badge">saved</span>
     </div>
     ${inp}
@@ -367,27 +425,35 @@ function mkCard(f, removable=false) {
   return c;
 }
 
-// ── Render all sections ──
+// ── Render everything ──
 function renderAll() {
+  // Built-in sections
   ['personal','academic','professional'].forEach(sec => {
     const g = document.getElementById('g-'+sec);
-    g.innerHTML='';
-    DEFS[sec].forEach(f => g.appendChild(mkCard(f)));
+    g.innerHTML = '';
+    DEFS[sec].forEach(f => g.appendChild(mkCard(f, false)));
   });
 
-  // Custom fields
-  const cg  = document.getElementById('g-custom');
-  const add = cg.querySelector('.addcard');
-  cg.innerHTML='';
-  const customs = JSON.parse(localStorage.getItem('fv_cust')||'[]');
-  customs.forEach(f => cg.appendChild(mkCard(f, true)));
-  if (add) cg.appendChild(add);
-  else {
-    const d=document.createElement('div'); d.className='addcard'; d.onclick=om;
+  // Custom fields — placed into their saved section
+  const cg   = document.getElementById('g-custom');
+  const addBtn = document.getElementById('addcard-btn') || (() => {
+    const d=document.createElement('div'); d.id='addcard-btn'; d.className='addcard'; d.onclick=om;
     d.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Add custom field</span>`;
-    cg.appendChild(d);
-  }
+    return d;
+  })();
+  cg.innerHTML='';
+
+  const customs = getCust();
+  customs.forEach(f => {
+    const targetId = f.section || 'custom';
+    const targetGrid = document.getElementById('g-'+targetId) || cg;
+    targetGrid.appendChild(mkCard(f, true));
+  });
+
+  cg.appendChild(addBtn);
+  document.getElementById('drag-tip').style.display = customs.length ? 'inline-flex' : 'none';
   prog();
+  initDropZones();
 }
 
 // ── Card actions ──
@@ -398,7 +464,7 @@ function svCard(btn) {
   save(i.dataset.id, v);
   i.setAttribute('readonly', true);
   c.classList.toggle('sv', v!=='');
-  toast(c.querySelector('.fc-lbl').textContent.trim()+' saved');
+  toast(c.querySelector('.fc-lbl-text').textContent.trim()+' saved');
   prog();
 }
 
@@ -412,29 +478,29 @@ function edCard(btn) {
 function cpCard(btn) {
   const c = btn.closest('.fc');
   const v = c.querySelector('.fi').value.trim();
-  const l = c.querySelector('.fc-lbl').textContent.trim();
-  if (!v) { toast('Empty — nothing to copy'); return; }
-  navigator.clipboard.writeText(v).then(() => toast(l+' copied'));
+  const l = c.querySelector('.fc-lbl-text').textContent.trim();
+  if (!v){ toast('Empty — nothing to copy'); return; }
+  navigator.clipboard.writeText(v).then(()=>toast(l+' copied'));
 }
 
 function rmCard(btn) {
-  const c = btn.closest('.fc');
-  const id = c.querySelector('.fi').dataset.id;
-  del(id);
-  const cust = JSON.parse(localStorage.getItem('fv_cust')||'[]').filter(f=>f.id!==id);
-  localStorage.setItem('fv_cust', JSON.stringify(cust));
+  const c   = btn.closest('.fc');
+  const id  = c.querySelector('.fi').dataset.id;
+  drop(id);
+  setCust(getCust().filter(f=>f.id!==id));
   c.remove();
   prog();
+  if (!getCust().length) document.getElementById('drag-tip').style.display='none';
   toast('Field deleted');
 }
 
-// ── Progress bar ──
+// ── Progress ──
 function prog() {
   const d = get();
   const cards = document.querySelectorAll('.fc');
   const total = cards.length;
-  const filled = [...cards].filter(c => {
-    const i = c.querySelector('.fi');
+  const filled = [...cards].filter(c=>{
+    const i=c.querySelector('.fi');
     return i && d[i.dataset.id]?.trim();
   }).length;
   const pct = total ? Math.round(filled/total*100) : 0;
@@ -446,24 +512,24 @@ function prog() {
 function copyAll() {
   const d = get();
   const lines = [];
-  document.querySelectorAll('.fc').forEach(c => {
-    const i = c.querySelector('.fi');
-    const l = c.querySelector('.fc-lbl').textContent.trim();
-    const v = d[i?.dataset.id];
-    if (v?.trim()) lines.push(l+': '+v);
+  document.querySelectorAll('.fc').forEach(c=>{
+    const i=c.querySelector('.fi');
+    const l=c.querySelector('.fc-lbl-text').textContent.trim();
+    const v=d[i?.dataset.id];
+    if(v?.trim()) lines.push(l+': '+v);
   });
-  if (!lines.length) { toast('No saved data to copy'); return; }
+  if(!lines.length){ toast('No saved data to copy'); return; }
   navigator.clipboard.writeText(lines.join('\n')).then(()=>toast('Copied '+lines.length+' fields'));
 }
 
 // ── Export / Import ──
 function exportJ() {
   const d = get();
-  if (!Object.keys(d).length) { toast('Nothing saved yet'); return; }
+  if(!Object.keys(d).length){ toast('Nothing saved yet'); return; }
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
-  a.download='formvault.json'; a.click(); URL.revokeObjectURL(a.href);
-  toast('Exported formvault.json');
+  a.download='formfill.json'; a.click(); URL.revokeObjectURL(a.href);
+  toast('Exported formfill.json');
 }
 
 function importJ(e) {
@@ -479,34 +545,113 @@ function importJ(e) {
 }
 
 // ── Search ──
-function filter() {
+function filterFields() {
   const q=document.getElementById('sq').value.toLowerCase().trim();
   let vis=0;
   document.querySelectorAll('.fc').forEach(c=>{
-    const match = !q || c.dataset.q.includes(q) || (c.querySelector('.fi')?.value||'').toLowerCase().includes(q);
-    c.style.display = match?'':'none';
+    const match=!q||c.dataset.q.includes(q)||(c.querySelector('.fi')?.value||'').toLowerCase().includes(q);
+    c.style.display=match?'':'none';
     if(match) vis++;
   });
   document.getElementById('empty').classList.toggle('on', vis===0 && q!=='');
 }
 
 // ── Custom field modal ──
-function om() { document.getElementById('modal').classList.add('on'); document.getElementById('mname').focus(); }
-function cm() { document.getElementById('modal').classList.remove('on'); document.getElementById('mname').value=''; }
+function om(){ document.getElementById('modal').classList.add('on'); document.getElementById('mname').focus(); }
+function cm(){ document.getElementById('modal').classList.remove('on'); document.getElementById('mname').value=''; }
 document.getElementById('modal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal'))cm(); });
 document.getElementById('mname').addEventListener('keydown',e=>{ if(e.key==='Enter') addCustom(); });
 
 function addCustom() {
-  const n=document.getElementById('mname').value.trim();
+  const n = document.getElementById('mname').value.trim();
   if(!n){ document.getElementById('mname').focus(); return; }
-  const t=document.getElementById('mtype').value;
-  const f={id:'c_'+Date.now(), label:n, type:t, ph:'Enter '+n};
-  const cust=JSON.parse(localStorage.getItem('fv_cust')||'[]');
-  cust.push(f); localStorage.setItem('fv_cust',JSON.stringify(cust));
-  const cg=document.getElementById('g-custom');
-  const add=cg.querySelector('.addcard');
-  cg.insertBefore(mkCard(f,true), add);
-  cm(); prog(); toast('"'+n+'" added');
+  const t   = document.getElementById('mtype').value;
+  const sec = document.getElementById('msection').value;
+  const f   = { id:'c_'+Date.now(), label:n, type:t, ph:'Enter '+n, section:sec };
+
+  const cust = getCust();
+  cust.push(f);
+  setCust(cust);
+
+  // Insert card into correct section grid
+  const targetGrid = document.getElementById('g-'+sec);
+  const addBtn     = document.getElementById('addcard-btn');
+  if (sec === 'custom') {
+    targetGrid.insertBefore(mkCard(f, true), addBtn);
+  } else {
+    targetGrid.appendChild(mkCard(f, true));
+  }
+
+  document.getElementById('drag-tip').style.display='inline-flex';
+  cm(); prog();
+  toast('"'+n+'" added to '+sec);
+}
+
+// ────────────────────────────────────────────
+//  DRAG-AND-DROP — move custom cards between sections
+// ────────────────────────────────────────────
+
+function initDropZones() {
+  document.querySelectorAll('.fgrid').forEach(grid => {
+    grid.addEventListener('dragover', e => {
+      e.preventDefault();
+      grid.classList.add('drag-over');
+    });
+    grid.addEventListener('dragleave', e => {
+      // Only remove if leaving the grid itself (not a child)
+      if (!grid.contains(e.relatedTarget)) grid.classList.remove('drag-over');
+    });
+    grid.addEventListener('drop', e => {
+      e.preventDefault();
+      grid.classList.remove('drag-over');
+      if (!dragId) return;
+
+      const newSection = grid.dataset.section;
+      if (!newSection) return;
+
+      // Update the custom field's section in storage
+      const cust = getCust();
+      const field = cust.find(f=>f.id===dragId);
+      if (!field) return; // only custom fields are draggable
+
+      const oldSection = field.section || 'custom';
+      if (oldSection === newSection) return; // no change
+
+      field.section = newSection;
+      setCust(cust);
+
+      // Move the DOM card
+      const card = document.querySelector(`.fc[data-id="${dragId}"]`);
+      if (!card) return;
+
+      if (newSection === 'custom') {
+        const addBtn = document.getElementById('addcard-btn');
+        grid.insertBefore(card, addBtn);
+      } else {
+        grid.appendChild(card);
+      }
+
+      toast('Moved to '+newSection);
+      prog();
+    });
+  });
+}
+
+function onDragStart(e, id) {
+  dragId = id;
+  // Use the card as drag image
+  const card = e.target.closest('.fc');
+  if (card) {
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setDragImage(card, 20, 20);
+  }
+}
+
+function onDragEnd(e) {
+  document.querySelectorAll('.fc.dragging').forEach(c=>c.classList.remove('dragging'));
+  document.querySelectorAll('.fgrid.drag-over').forEach(g=>g.classList.remove('drag-over'));
+  dragId = null;
 }
 
 // ── Scroll nav ──
@@ -515,15 +660,7 @@ function goto(id) {
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('nb-'+id)?.classList.add('on');
 }
-
-new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-      document.getElementById('nb-'+e.target.id)?.classList.add('on');
-    }
-  });
-},{threshold:.25}).observe && ['personal','academic','professional','custom'].forEach(id=>{
+['personal','academic','professional','custom'].forEach(id=>{
   const el=document.getElementById(id);
   if(el) new IntersectionObserver(entries=>{
     if(entries[0].isIntersecting){
@@ -537,7 +674,7 @@ new IntersectionObserver(entries=>{
 function toggleTheme(){
   const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
   document.documentElement.setAttribute('data-theme',t);
-  localStorage.setItem('fv_theme',t);
+  localStorage.setItem('ff_theme',t);
   setThemeIcon(t);
 }
 function setThemeIcon(t){
@@ -556,7 +693,7 @@ function toast(msg){
 
 // ── Init ──
 (function(){
-  const theme=localStorage.getItem('fv_theme')||'light';
+  const theme=localStorage.getItem('ff_theme')||'light';
   document.documentElement.setAttribute('data-theme',theme);
   setThemeIcon(theme);
   renderAll();
